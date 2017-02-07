@@ -101,12 +101,8 @@ namespace Revit.Elements.InternalUtilities
                     result = param.AsInteger();
                     break;
                 case StorageType.Double:
-                    var paramType = param.Definition.ParameterType;
-                    if (Element.IsConvertableParameterType(paramType))
-                        result = param.AsDouble() * Revit.GeometryConversion.UnitConverter.HostToDynamoFactor(
-                            ParameterTypeToUnitType(paramType));
-                    else
-                        result = param.AsDouble();
+                    var unitType = param.Definition.UnitType;
+                    result = param.AsDouble() * Revit.GeometryConversion.UnitConverter.HostToDynamoFactor(unitType);
                     break;
                 default:
                     throw new Exception(string.Format(Properties.Resources.ParameterWithoutStorageType, param));
@@ -124,12 +120,7 @@ namespace Revit.Elements.InternalUtilities
         [SupressImportIntoVM]
         private static double ConvertValue(ParameterType type, double value)
         {
-            if (Element.IsConvertableParameterType(type))
-            {
-                return value * UnitConverter.DynamoToHostFactor(ParameterTypeToUnitType(type));
-            }
-
-            return value;
+            return value * UnitConverter.DynamoToHostFactor(ParameterTypeToUnitType(type));
         }
 
         #region dynamic parameter setting methods
@@ -186,39 +177,11 @@ namespace Revit.Elements.InternalUtilities
         [SupressImportIntoVM]
         public static double GetConvertedParameterValue(Autodesk.Revit.DB.Parameter param, double value)
         {
-            var paramType = param.Definition.ParameterType;
+            var unitType = param.Definition.UnitType;
+            return value * UnitConverter.DynamoToHostFactor(unitType);
 
-            if (Element.IsConvertableParameterType(paramType))
-            {
-                return value * UnitConverter.DynamoToHostFactor(ParameterTypeToUnitType(paramType));
-            }
-
-            return value;
         }
 
-        [SupressImportIntoVM]
-        internal static UnitType ParameterTypeToUnitType(ParameterType parameterType)
-        {
-            switch (parameterType)
-            {
-                case ParameterType.Length:
-                    return UnitType.UT_Length;
-                case ParameterType.Area:
-                    return UnitType.UT_Area;
-                case ParameterType.Volume:
-                    return UnitType.UT_Volume;
-                case ParameterType.Angle:
-                    return UnitType.UT_Angle;
-                case ParameterType.Slope:
-                    return UnitType.UT_Slope;
-                case ParameterType.Currency:
-                    return UnitType.UT_Currency;
-                case ParameterType.MassDensity:
-                    return UnitType.UT_MassDensity;
-                default:
-                    throw new Exception(Properties.Resources.UnitTypeConversionError);
-            }
-        }
         #endregion
     }
 }
